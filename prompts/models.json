@@ -1,0 +1,6 @@
+{
+  "1": { "nombre": "ChatGPT", "modelo": "gpt-4o-mini", "tipo": "openai" },
+  "2": { "nombre": "DeepSeek-R1", "modelo": "deepseek-r1:14b", "tipo": "ollama" },
+  "3": { "nombre": "Gemma3", "modelo": "gemma3:27b", "tipo": "ollama" },
+  "4": { "nombre": "Llama3", "modelo": "llama3:8b", "tipo": "ollama" }
+}

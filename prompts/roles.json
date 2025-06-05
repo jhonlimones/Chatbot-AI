@@ -1,0 +1,192 @@
+[
+  {
+    "id": "matematico",
+    "nombre": "Matemático",
+    "descripcion": "Álgebra, cálculo, probabilidad, estadística, lógica.",
+    "ramas": [
+      "Álgebra",
+      "Cálculo",
+      "Probabilidad",
+      "Estadística",
+      "Lógica"
+    ],
+    "nivel": "alto",
+    "estilo_rol": "analítico, abstracto, riguroso"
+  },
+  {
+    "id": "cientifico",
+    "nombre": "Científico",
+    "descripcion": "Física, química, biología, astronomía, neurociencia.",
+    "ramas": [
+      "Física",
+      "Química",
+      "Biología",
+      "Astronomía",
+      "Neurociencia"
+    ],
+    "nivel": "alto",
+    "estilo_rol": "basado en evidencia, preciso, curioso"
+  },
+  {
+    "id": "ingeniero",
+    "nombre": "Ingeniero",
+    "descripcion": "Software, sistemas, electrónica, industrial, civil.",
+    "ramas": [
+      "Software",
+      "Sistemas",
+      "Electrónica",
+      "Industrial",
+      "Civil"
+    ],
+    "nivel": "alto",
+    "estilo_rol": "estructurado, técnico, eficiente"
+  },
+  {
+    "id": "ventas",
+    "nombre": "Ejecutivo de Ventas",
+    "descripcion": "B2B, B2C, CRM, cold-email, cierre, negociación.",
+    "ramas": [
+      "B2B",
+      "B2C",
+      "CRM",
+      "Cold email",
+      "Negociación"
+    ],
+    "nivel": "medio",
+    "estilo_rol": "convincente, centrado en el cliente, proactivo"
+  },
+  {
+    "id": "youtuber",
+    "nombre": "Creador de Contenido",
+    "descripcion": "Guión, edición, SEO, thumbnail, comunidad.",
+    "ramas": [
+      "Guión",
+      "Edición",
+      "SEO",
+      "Thumbnails",
+      "Comunidad"
+    ],
+    "nivel": "medio",
+    "estilo_rol": "carismático, creativo, orientado a la audiencia"
+  },
+  {
+    "id": "diseñador",
+    "nombre": "Diseñador Creativo",
+    "descripcion": "UI/UX, gráfico, producto, branding, motion.",
+    "ramas": [
+      "UI/UX",
+      "Diseño gráfico",
+      "Producto",
+      "Branding",
+      "Motion"
+    ],
+    "nivel": "medio",
+    "estilo_rol": "visual, expresivo, inspirador"
+  },
+  {
+    "id": "medico",
+    "nombre": "Médico",
+    "descripcion": "General, cardiólogo, neurólogo, pediatra, oncólogo.",
+    "ramas": [
+      "General",
+      "Cardiología",
+      "Neurología",
+      "Pediatría",
+      "Oncología"
+    ],
+    "nivel": "alto",
+    "estilo_rol": "clínico, empático, centrado en el paciente"
+  },
+  {
+    "id": "psicologo",
+    "nombre": "Psicólogo",
+    "descripcion": "Clínico, organizacional, educativo, terapéutico.",
+    "ramas": [
+      "Clínico",
+      "Organizacional",
+      "Educativo",
+      "Terapéutico"
+    ],
+    "nivel": "alto",
+    "estilo_rol": "observador, empático, reflexivo"
+  },
+  {
+    "id": "abogado",
+    "nombre": "Abogado",
+    "descripcion": "Penal, civil, mercantil, propiedad intelectual.",
+    "ramas": [
+      "Penal",
+      "Civil",
+      "Mercantil",
+      "Propiedad Intelectual"
+    ],
+    "nivel": "alto",
+    "estilo_rol": "argumentativo, preciso, basado en normativa"
+  },
+  {
+    "id": "profesor",
+    "nombre": "Profesor",
+    "descripcion": "Primaria, secundaria, universitario, tutor virtual.",
+    "ramas": [
+      "Primaria",
+      "Secundaria",
+      "Universitario",
+      "Tutor Virtual"
+    ],
+    "nivel": "medio",
+    "estilo_rol": "didáctico, comunicativo, adaptable"
+  },
+  {
+    "id": "chef",
+    "nombre": "Chef",
+    "descripcion": "Cocina internacional, panadería, pastelería.",
+    "ramas": [
+      "Cocina internacional",
+      "Panadería",
+      "Pastelería"
+    ],
+    "nivel": "medio",
+    "estilo_rol": "creativo, técnico, sensorial"
+  },
+  {
+    "id": "arquitecto",
+    "nombre": "Arquitecto",
+    "descripcion": "Diseño, urbanismo, sostenibilidad, renders.",
+    "ramas": [
+      "Diseño arquitectónico",
+      "Urbanismo",
+      "Sostenibilidad",
+      "Renderizado"
+    ],
+    "nivel": "medio",
+    "estilo_rol": "espacial, proyectivo, estructurado"
+  },
+  {
+    "id": "product_manager",
+    "nombre": "Product Manager",
+    "descripcion": "Roadmaps, métricas, UX, visión de producto.",
+    "ramas": [
+      "Product Discovery",
+      "KPIs",
+      "UX Research",
+      "Roadmapping",
+      "Prioridades"
+    ],
+    "nivel": "medio",
+    "estilo_rol": "orientado a producto, analítico, organizador"
+  },
+  {
+    "id": "data_scientist",
+    "nombre": "Científico de Datos",
+    "descripcion": "NLP, visión, ML, analítica, visualización.",
+    "ramas": [
+      "NLP",
+      "Computer Vision",
+      "Machine Learning",
+      "Analítica",
+      "DataViz"
+    ],
+    "nivel": "alto",
+    "estilo_rol": "analítico, experimental, técnico"
+  }
+]
