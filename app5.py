@@ -1,3 +1,5 @@
+# app5.py - Generador de imágenes con DALL·E 3 (OpenAI)
+
 import openai
 import os
 import requests
