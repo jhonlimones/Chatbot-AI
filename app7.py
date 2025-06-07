@@ -59,63 +59,226 @@ def verificar_modelo_disponible():
         return False
 
 def cargar_prompt_base():
-    """Carga el prompt base para mejorar prompts"""
+    """Carga el prompt base para mejorar prompts desde el archivo JSON"""
     with open(PROMPT_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
     return data["instruccion"]
 
+def validar_prompt_completo(prompt: str) -> bool:
+    """Valida si un prompt está completo y no cortado"""
+    if not prompt or len(prompt.strip()) < 10:
+        return False
+    
+    # Verificar si termina abruptamente (sin puntuación adecuada)
+    prompt_limpio = prompt.strip()
+    
+    # Si termina en medio de una palabra o frase
+    palabras_incompletas = [
+        "en el", "en la", "con un", "con una", "de la", "de un", 
+        "que está", "mientras", "durante", "bajo un", "sobre la", 
+        "hacia", "desde"
+    ]
+    
+    for palabra_incompleta in palabras_incompletas:
+        if prompt_limpio.lower().endswith(palabra_incompleta):
+            return False
+    
+    # Si no termina con puntuación o palabra completa
+    if prompt_limpio.endswith((",", "en", "y", "con", "de", "la", "el", "un", "una")):
+        return False
+        
+    return True
+
 def mejorar_prompt_con_deepseek(user_prompt: str) -> str:
-    """Mejora un prompt usando DeepSeek-R1"""
-    base = cargar_prompt_base()
-    completo = f"{base}\n\nUsuario: {user_prompt}"
+    """Mejora un prompt usando DeepSeek-R1 con reintentos y validación mejorada"""
+    max_intentos = 3
+    
+    for intento in range(max_intentos):
+        try:
+            print(f"🔄 Intento {intento + 1}/{max_intentos}")
+            
+            # Cargar prompt base desde el archivo JSON
+            base = cargar_prompt_base()
+            
+            # Crear un prompt más específico para evitar cortes
+            prompt_mejorado = f"""{base}
 
-    response = requests.post(
-        f"{OLLAMA_HOST}/api/generate",
-        json={
-            "model": OLLAMA_MODEL, 
-            "prompt": completo, 
-            "stream": False,
-            "options": {
-                "temperature": 0.7,
-                "top_p": 0.9,
-                "num_predict": 300
+IMPORTANTE: Debes completar TODA la descripción. No te detengas a mitad de frase. Asegúrate de terminar con una descripción completa y coherente.
+
+Usuario: {user_prompt}
+
+Descripción mejorada:"""
+
+            # Parámetros más agresivos para obtener respuestas completas
+            payload = {
+                "model": OLLAMA_MODEL, 
+                "prompt": prompt_mejorado, 
+                "stream": False,
+                "options": {
+                    "temperature": 0.9,
+                    "top_p": 0.95,
+                    "top_k": 40,
+                    "num_predict": 800,        # Aumentado significativamente
+                    "repeat_penalty": 1.1,
+                    "stop": [],                # Sin stops para evitar cortes prematuros
+                    "num_ctx": 4096           # Contexto más grande
+                }
             }
-        },
-        timeout=60
-    )
-    response.raise_for_status()
-    resultado = response.json().get("response", "").strip()
+            
+            print(f"📡 Enviando solicitud a Ollama (timeout: 120s)...")
+            start_time = datetime.datetime.now()
+            
+            response = requests.post(
+                f"{OLLAMA_HOST}/api/generate",
+                json=payload,
+                timeout=120  # Aumentado a 2 minutos
+            )
+            
+            end_time = datetime.datetime.now()
+            tiempo_transcurrido = (end_time - start_time).total_seconds()
+            print(f"⏱️  Respuesta recibida en {tiempo_transcurrido:.1f} segundos")
+            
+            response.raise_for_status()
+            resultado = response.json().get("response", "").strip()
+            
+            print(f"📊 Respuesta cruda recibida: {len(resultado)} caracteres")
 
-    if not resultado:
-        raise ValueError("La respuesta del modelo está vacía.")
+            if not resultado:
+                print(f"⚠️  Intento {intento + 1}: Respuesta vacía del modelo")
+                continue
 
-    # Limpiar respuesta de etiquetas de pensamiento
-    if "<think>" in resultado:
-        if "</think>" in resultado:
-            resultado = resultado.split("</think>")[-1].strip()
-        else:
-            resultado = resultado.split("<think>")[0].strip()
+            # Limpiar respuesta de etiquetas de pensamiento (más exhaustivo)
+            resultado_original = resultado
+            
+            # Procesar etiquetas <think>
+            if "<think>" in resultado:
+                print("🧹 Limpiando etiquetas de pensamiento...")
+                
+                if "</think>" in resultado:
+                    # Tomar todo lo que esté después de </think>
+                    partes = resultado.split("</think>")
+                    if len(partes) > 1:
+                        resultado = partes[-1].strip()
+                    else:
+                        resultado = resultado.split("<think>")[0].strip()
+                else:
+                    # Si no hay cierre, tomar lo que esté antes de <think>
+                    resultado = resultado.split("<think>")[0].strip()
+            
+            # Limpiar prefijos no deseados (más exhaustivo)
+            prefijos_a_remover = [
+                "Prompt:", "prompt:", "Nuevo prompt:", "Mejorado:", "Descripción:", 
+                "Descripción mejorada:", "descripción mejorada:", "Resultado:",
+                "resultado:", "Aquí tienes:", "aquí tienes:", "Te propongo:",
+                "te propongo:", "Sería:", "sería:"
+            ]
+            
+            for prefijo in prefijos_a_remover:
+                if resultado.startswith(prefijo):
+                    resultado = resultado[len(prefijo):].strip()
+            
+            # Remover comillas si envuelven toda la respuesta
+            if resultado.startswith('"') and resultado.endswith('"'):
+                resultado = resultado[1:-1].strip()
+            
+            print(f"📊 Después de limpieza: {len(resultado)} caracteres")
+            
+            # Validación mejorada de completitud
+            if not validar_prompt_completo_mejorado(resultado):
+                print(f"⚠️  Intento {intento + 1}: Prompt parece incompleto")
+                print(f"🔍 Terminación actual: '...{resultado[-50:]}'")
+                continue
+            
+            print(f"✅ Prompt mejorado exitosamente en intento {intento + 1}")
+            return resultado
+            
+        except requests.exceptions.Timeout:
+            print(f"⏰ Intento {intento + 1}: Timeout - el modelo tardó más de 120 segundos")
+            continue
+        except Exception as e:
+            print(f"⚠️  Intento {intento + 1} falló: {e}")
+            if intento == max_intentos - 1:
+                raise ValueError(f"No se pudo mejorar el prompt después de {max_intentos} intentos")
+            continue
     
-    # Limpiar posibles prefijos no deseados
-    prefijos_a_remover = ["Prompt:", "prompt:", "Nuevo prompt:", "Mejorado:", "Descripción:"]
-    for prefijo in prefijos_a_remover:
-        if resultado.startswith(prefijo):
-            resultado = resultado[len(prefijo):].strip()
+    raise ValueError("Se agotaron todos los intentos para mejorar el prompt")
+
+def validar_prompt_completo_mejorado(prompt: str) -> bool:
+    """Validación más estricta para detectar prompts incompletos"""
+    if not prompt or len(prompt.strip()) < 20:  # Mínimo más alto
+        return False
     
-    return resultado
+    prompt_limpio = prompt.strip()
+    
+    # Verificar longitud mínima esperada para un prompt mejorado
+    if len(prompt_limpio) < 50:
+        return False
+    
+    # Palabras/frases que indican final abrupto
+    finales_abruptos = [
+        # Preposiciones
+        "en el", "en la", "con un", "con una", "de la", "de un", "por el", "por la",
+        "hacia el", "hacia la", "desde el", "desde la", "sobre el", "sobre la",
+        "bajo el", "bajo la", "entre el", "entre la", "durante el", "durante la",
+        
+        # Conjunciones y conectores
+        "que está", "que se", "mientras", "durante", "cuando", "donde", "como",
+        "y", "pero", "sin embargo", "además", "también",
+        
+        # Artículos y determinantes
+        "el", "la", "los", "las", "un", "una", "unos", "unas",
+        
+        # Verbos auxiliares incompletos
+        "está", "son", "tienen", "puede", "debe", "va", "viene",
+        
+        # Palabras que sugieren continuación
+        "creando", "generando", "mostrando", "revelando", "capturando",
+        "destacando", "iluminando", "reflejando"
+    ]
+    
+    for final_abrupto in finales_abruptos:
+        if prompt_limpio.lower().endswith(final_abrupto.lower()):
+            return False
+    
+    # Verificar si termina con coma (generalmente indica continuación)
+    if prompt_limpio.endswith(","):
+        return False
+    
+    # Verificar si la última palabra está incompleta (muy corta sin puntuación)
+    ultima_palabra = prompt_limpio.split()[-1] if prompt_limpio.split() else ""
+    if len(ultima_palabra) < 3 and not ultima_palabra.endswith(('.', '!', '?')):
+        return False
+    
+    # Verificar que tenga al menos algunos elementos descriptivos básicos
+    elementos_descriptivos = ["color", "luz", "estilo", "atmósfera", "detalle", "textura", "fondo", "primer plano"]
+    tiene_elementos = any(elemento in prompt_limpio.lower() for elemento in elementos_descriptivos)
+    
+    if not tiene_elementos and len(prompt_limpio) < 100:
+        return False
+    
+    return True
 
 def guardar_prompt_mejorado(prompt_original: str, prompt_mejorado: str):
-    """Guarda el prompt mejorado en un archivo JSON"""
+    """Guarda el prompt mejorado en un archivo JSON solo si es válido"""
+    # Validar antes de guardar con la nueva función
+    if not prompt_mejorado or not validar_prompt_completo_mejorado(prompt_mejorado):
+        print("❌ No se guardará el prompt porque está incompleto o vacío")
+        return False
+        
     nombre = f"prompt_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     ruta = os.path.join("prompts", "generados", nombre)
     data = {
         "fecha": datetime.datetime.now().isoformat(),
         "prompt_original": prompt_original,
-        "prompt_mejorado": prompt_mejorado
+        "prompt_mejorado": prompt_mejorado,
+        "longitud_caracteres": len(prompt_mejorado),
+        "longitud_palabras": len(prompt_mejorado.split()),
+        "es_completo": validar_prompt_completo_mejorado(prompt_mejorado)
     }
     with open(ruta, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"📝 Prompt guardado: {ruta}")
+    print(f"📝 Prompt guardado exitosamente: {ruta}")
+    return True
 
 # ==============================
 # 🎨 FUNCIONES DE MODELOS
